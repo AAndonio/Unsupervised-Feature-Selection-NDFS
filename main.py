@@ -85,8 +85,6 @@ numeroElementiSelezionati = contatoreFeature
 
 '''
 
-numeroElementiSelezionati = int(round(len(dataframeFeaturePesate.index)*1))
-
 # Estrazione nome feature rilevanti
 nomiFeatureSelezionate = dataframeFeaturePesate.index[0:numeroElementiSelezionati]
 
@@ -126,5 +124,7 @@ labels = kmeansSelezionate.predict(all_features_test)
 
 print("===================================")
 print("Valori k-means con solo feature selezionate")
-print(labels)
-stampaRisultati(dataframeFeatureSelezionate, labels, labelConosciute, tempo)
+print(len(labels))
+
+
+stampaRisultati(all_features_test, labels, labelConosciute, tempo)
