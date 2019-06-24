@@ -43,7 +43,6 @@ relevant_features_test = pd.read_pickle("./pickle/feature_rilevanti/TEST/{0}_TES
 all_features_train = pd.read_pickle("./pickle/feature_complete/TRAIN/{0}_TRAIN_FeatureComplete.pkl".format(sys.argv[1])) 
 all_features_test = pd.read_pickle("./pickle/feature_complete/TEST/{0}_TEST_FeatureComplete.pkl".format(sys.argv[1])) 
 
-
 all_features_train = all_features_train.dropna(axis=1)
 all_features_test = all_features_test.dropna(axis=1)
 
@@ -53,6 +52,8 @@ featurePesate = ndfs(all_features_train.values, n_clusters=2)
 # Creazione dataframe con feature e relativi pesi
 dataframeFeaturePesate = pd.DataFrame(data = featurePesate[0:,0:], index = all_features_train.columns)
 
+dataframeFeaturePesateTemp = dataframeFeaturePesate
+
 # Calcolo della deviazione standard dei pesi per effettuare selezione. Si selezionano quelle con ds maggiore.
 deviazioneStandardRighe = []
   
@@ -61,39 +62,23 @@ for i, j in dataframeFeaturePesate.iterrows():
 
 # Aggiungo colonna nel dataframe con la ds per la rispettiva riga. Ordino per ds in maniera discendente
 dataframeFeaturePesate["sd"] = deviazioneStandardRighe
-dataframeFeaturePesate = dataframeFeaturePesate.sort_values(["sd"], axis = 0, ascending = False)
+
+# Aggiungo colonna nel dataframe con la somma dei pesi per la rispettiva riga.
+dataframeFeaturePesate["sum"] = dataframeFeaturePesateTemp.sum(axis = 1, skipna = True)
+
+dataframeFeaturePesate["pesototale"] = dataframeFeaturePesate["sd"] + dataframeFeaturePesate["sum"]
+
+dataframeFeaturePesate = dataframeFeaturePesate.sort_values(["pesototale"], axis = 0, ascending = False)
 
 # Calcolo del numero di feature dal selezionare. Qui usiamo il 70% delle feature estratte da TSFresh. Da far vedere.
-numeroElementiSelezionati = int(round(len(dataframeFeaturePesate.index)*0.5))
-
-# Indice dell'80% delle feature più importanti su NDFS secondo l'analisi di Pareto, effettuato sulle deviazioni standard
-
-'''
-somma = sum(dataframeFeaturePesate["sd"]) * 0.8
-Pareto = 0
-contatoreFeature = 0
-for i in dataframeFeaturePesate["sd"]:
-    Pareto = Pareto + i
-    contatoreFeature = contatoreFeature + 1
-    if (Pareto >= somma):
-        print("Numero di feature senza Pareto: " + str(len(dataframeFeaturePesate["sd"])))
-        print("Numero di feature senza Pareto (80%): " + str(round(len(dataframeFeaturePesate["sd"]) * 0.8)))
-        print("Numero di feature secondo Pareto: " + str(contatoreFeature) + "\n")
-        break
-
-numeroElementiSelezionati = contatoreFeature
-
-'''
-
-numeroElementiSelezionati = int(round(len(dataframeFeaturePesate.index)*1))
+numeroElementiSelezionati = int(round(len(dataframeFeaturePesate.index)*0.6))
 
 # Estrazione nome feature rilevanti
 nomiFeatureSelezionate = dataframeFeaturePesate.index[0:numeroElementiSelezionati]
+all_features_test = all_features_test.loc[:,nomiFeatureSelezionate]
 
 # Selezione colonne delle feature rilevanti nel dataframe originale
 dataframeFeatureSelezionate = all_features_train.loc[:,nomiFeatureSelezionate]
-all_features_test = all_features_test.loc[:,nomiFeatureSelezionate]
-
 
 labelConosciute = estrattoreClassiConosciute.estraiLabelConosciute("./UCRArchive_2018/{0}/{0}_TEST.tsv".format(sys.argv[1]))
 
