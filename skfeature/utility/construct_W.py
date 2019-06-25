@@ -6,10 +6,12 @@ from sklearn.metrics.pairwise import pairwise_distances
 def construct_W(X, **kwargs):
     """
     Construct the affinity matrix W through different ways
+
     Notes
     -----
     if kwargs is null, use the default parameter settings;
     if kwargs is not null, construct the affinity matrix according to parameters in kwargs
+
     Input
     -----
     X: {numpy array}, shape (n_samples, n_features)
@@ -47,6 +49,7 @@ def construct_W(X, **kwargs):
             indicates whether to build the affinity matrix in a reliefF way, NH(x) and NM(x,y) denotes a set of
             k nearest points to x with the same class as x, and a different class (the class y), respectively.
             W_ij = 1 if i = j; W_ij = 1/k if x_j \in NH(x_i); W_ij = -1/(c-1)k if x_j \in NM(x_i, y) (default reliefF = false)
+
     Output
     ------
     W: {sparse matrix}, shape (n_samples, n_samples)
@@ -340,4 +343,4 @@ def construct_W(X, **kwargs):
             W = csc_matrix((G[:, 2], (G[:, 0], G[:, 1])), shape=(n_samples, n_samples))
             bigger = np.transpose(W) > W
             W = W - W.multiply(bigger) + np.transpose(W).multiply(bigger)
-    return W
+            return W

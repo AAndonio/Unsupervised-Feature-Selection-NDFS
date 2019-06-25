@@ -2,7 +2,7 @@ import numpy as np
 import sys
 import math
 import sklearn.cluster
-from construct_W import construct_W
+from skfeature.utility.construct_W import construct_W
 
 
 def ndfs(X, **kwargs):
@@ -30,6 +30,7 @@ def ndfs(X, **kwargs):
             number of clusters
         verbose: {boolean}
             True if user want to print out the objective function value in each iteration, false if not
+
     Output
     ------
     W: {numpy array}, shape(n_features, n_clusters)
@@ -103,8 +104,9 @@ def ndfs(X, **kwargs):
 
         # calculate objective function
         obj[iter_step] = np.trace(np.dot(np.dot(F.transpose(), M), F)) + gamma/4*np.linalg.norm(np.dot(F.transpose(), F)-np.identity(n_clusters), 'fro')
+        
         if verbose:
-            print('obj at iter {0}: {1}'.format(iter_step+1, obj[iter_step]))
+            print ('obj at iter ' + str(iter_step+1) + ': ' + str(obj[iter_step]))
 
         if iter_step >= 1 and math.fabs(obj[iter_step] - obj[iter_step-1]) < 1e-3:
             break
@@ -114,12 +116,14 @@ def ndfs(X, **kwargs):
 def kmeans_initialization(X, n_clusters):
     """
     This function uses kmeans to initialize the pseudo label
+
     Input
     -----
     X: {numpy array}, shape (n_samples, n_features)
         input data
     n_clusters: {int}
         number of clusters
+
     Output
     ------
     Y: {numpy array}, shape (n_samples, n_clusters)
@@ -131,15 +135,13 @@ def kmeans_initialization(X, n_clusters):
                                     tol=0.0001, precompute_distances=True, verbose=0,
                                     random_state=None, copy_x=True, n_jobs=1)
     kmeans.fit(X)
-
-    labels = kmeans.labels_                     #label di appartenenza a cluster
-    
-    Y = np.zeros((n_samples, n_clusters))       #inizializza matrice a 0
-    for row in range(0, n_samples):             #Per ogni sample
-        Y[row, labels[row]] = 1                 #Mette valore 1 nella colonna del cluster dove il sample appartiene
+    labels = kmeans.labels_
+    Y = np.zeros((n_samples, n_clusters))
+    for row in range(0, n_samples):
+        Y[row, labels[row]] = 1
     T = np.dot(Y.transpose(), Y)
     F = np.dot(Y, np.sqrt(np.linalg.inv(T)))
-    F = F + 0.02*np.ones((n_samples, n_clusters))   
+    F = F + 0.02*np.ones((n_samples, n_clusters))
     return F
 
 
