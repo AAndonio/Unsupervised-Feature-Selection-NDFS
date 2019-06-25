@@ -5,10 +5,11 @@ import sklearn.cluster
 from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score, normalized_mutual_info_score, confusion_matrix
 import time
 import estrattoreClassiConosciute
-from skfeature.function.sparse_learning_based import NDFS
+from skfeature.function.similarity_based import lap_score
 from skfeature.utility import construct_W
 from skfeature.utility.sparse_learning import feature_ranking
 import valutazione
+
 
 
 # Opzioni per stampa di pandas
@@ -64,15 +65,14 @@ all_features_train = all_features_train.dropna(axis=1)
 all_features_test = all_features_test.dropna(axis=1)
 
 # Costruisco matrice W da dare a NDFS
-kwargs = {"metric": "euclidean", "neighborMode": "knn",
-          "weightMode": "heatKernel", "k": 5, 't': 1}
-W = construct_W.construct_W(all_features_train.values, **kwargs)
+kwargs_W = {"metric": "euclidean", "neighbor_mode": "knn", "weight_mode": "heat_kernel", "k": 5, 't': 1}
+W = construct_W.construct_W(all_features_train.values, **kwargs_W)
 
 # Esecuzione dell'algoritmo NDFS. Otteniamo il peso delle feature per cluster.
-featurePesate = NDFS.ndfs(all_features_train.values, n_clusters=20, W=W)
+featurePesate = lap_score.lap_score(all_features_train.values, W=W)
 
 # ordinamento delle feature in ordine discendente
-idx = feature_ranking(featurePesate)
+idx = lap_score.feature_ranking(featurePesate)
 
 idxSelected = idx[0:num_feature]   # seleziono il numero di feature che voglio
 
@@ -91,7 +91,6 @@ all_features_test = all_features_test.loc[:, nomiFeatureSelezionate]
 # Estraggo le classi conosciute
 labelConosciute = estrattoreClassiConosciute.estraiLabelConosciute(
     "./UCRArchive_2018/{0}/{0}_TEST.tsv".format(sys.argv[1]))
-
 
 # K-means su dataframe estratto da TSFresh
 nmi_total = 0
