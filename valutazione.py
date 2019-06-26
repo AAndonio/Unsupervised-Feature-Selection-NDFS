@@ -1,5 +1,5 @@
 import numpy as np
-import sklearn.utils.linear_assignment_ as la
+import linear_assignment as la
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score, normalized_mutual_info_score, confusion_matrix
 from sklearn.cluster import KMeans
@@ -75,7 +75,7 @@ def evaluation(X_selected, X_test, n_clusters, y):
     y_predict = k_means.predict(X_test)
 
     # calculate NMI
-    nmi = normalized_mutual_info_score(y, y_predict, average_method='arithmetic')
+    nmi = normalized_mutual_info_score(y, y_predict, average_method='max')
 
     # calculate ACC
     y_permuted_predict = best_map(y, y_predict)
@@ -86,5 +86,7 @@ def evaluation(X_selected, X_test, n_clusters, y):
     db_score = davies_bouldin_score(X_test, y_predict)
     ch_score = calinski_harabasz_score(X_test, y_predict)
     purity = calcolaPurity(y, y_predict)
+
+
 
     return nmi, acc, sil, db_score, ch_score, purity

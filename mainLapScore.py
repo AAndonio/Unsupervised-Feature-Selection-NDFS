@@ -68,11 +68,15 @@ all_features_test = all_features_test.dropna(axis=1)
 kwargs_W = {"metric": "euclidean", "neighbor_mode": "knn", "weight_mode": "heat_kernel", "k": 5, 't': 1}
 W = construct_W.construct_W(all_features_train.values, **kwargs_W)
 
-# Esecuzione dell'algoritmo NDFS. Otteniamo il peso delle feature per cluster.
-featurePesate = lap_score.lap_score(all_features_train.values, W=W)
+for i in range(0,5):
 
-# ordinamento delle feature in ordine discendente
-idx = lap_score.feature_ranking(featurePesate)
+    # Esecuzione dell'algoritmo NDFS. Otteniamo il peso delle feature per cluster.
+    featurePesate = lap_score.lap_score(all_features_train.values, W=W)
+
+    # ordinamento delle feature in ordine discendente
+    idx = lap_score.feature_ranking(featurePesate)
+
+    print(idx)
 
 idxSelected = idx[0:num_feature]   # seleziono il numero di feature che voglio
 

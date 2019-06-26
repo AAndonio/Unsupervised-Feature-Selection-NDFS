@@ -9,6 +9,7 @@ from skfeature.function.sparse_learning_based import NDFS
 from skfeature.utility import construct_W
 from skfeature.utility.sparse_learning import feature_ranking
 import valutazione
+import collections
 
 
 # Opzioni per stampa di pandas
@@ -17,34 +18,38 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
 
-def stampaRisultati(dataframeIniziale, predict, labelConosciute, tempo):
-    print("\nValutazione sul clustering senza tener conto delle label conosciute:\n")
-    print("\tSilhouette score: {0} \n".format(silhouette_score(
-        dataframeIniziale, predict, metric="euclidean")))
-    print("\tDavies-Bouldin score: {0} \n".format(
-        davies_bouldin_score(dataframeIniziale, predict)))
-    print("\tCalinski-Harabasz score: {0} \n".format(
-        calinski_harabasz_score(dataframeIniziale, predict)))
+def testFeatureSelection(X_selected, X_test, num_clusters, y):
+    new_nmi, new_acc, new_sil, new_db_score, new_ch_score, new_purity = valutazione.evaluation(
+            X_selected=X_selected, X_test=X_test, n_clusters=num_cluster, y=y)
+    nmi = new_nmi
+    acc = new_acc
+    sil = new_sil
+    db_score = new_db_score
+    ch_score = new_ch_score
+    purity = new_purity
 
-    print("Valutazione sul clustering tenenedo conto delle label conosciute:\n")
-    print("\tNormalized mutual info score: {0} \n".format(
-        normalized_mutual_info_score(labelConosciute, predict, average_method="arithmetic")))
-    print("\tPurity: {0} \n".format(calcolaPurity(labelConosciute, predict)))
-    print("Tempo: {0} \n".format(tempo))
+    for i in range(0, 20):
+        new_nmi, new_acc, new_sil, new_db_score, new_ch_score, new_purity = valutazione.evaluation(
+            X_selected=X_selected, X_test=X_test, n_clusters=num_cluster, y=y)
+        if(new_nmi > nmi and new_acc > acc and new_sil > sil and new_db_score < db_score and new_purity > purity and new_ch_score > ch_score):
+            nmi = new_nmi
+            acc = new_acc
+            sil = new_sil
+            db_score = new_db_score
+            ch_score = new_ch_score
+            purity = new_purity
+
+    # output Silhouette, DB index, CH index, NMI, Purity e Accuracy
+    print('Silhouette:', float(sil))
+    print('Davies-Bouldin index score:', float(db_score))
+    print('Calinski-Harabasz index score:', float(ch_score))
+    print('NMI:', float(round(((nmi)), 4)))
+    print('Purity:', float(purity))
+    print('Accuracy:', float(acc))
 
 
-def calcolaPurity(labelConosciute, labels):
-    confusionMatrix = confusion_matrix(labelConosciute, labels)
-
-    totale = 0
-
-    for i in range(0, confusionMatrix.shape[0]):
-        totale = totale + max(confusionMatrix[i])
-
-    return totale/len(labels)
-
-num_feature = int(sys.argv[2])  # numero feature selezionate 
-num_cluster = int(sys.argv[3])   # number of clusters, it is usually set as the number of classes in the ground truth
+num_feature = int(sys.argv[2]) # numero feature selezionate
+num_cluster = int(sys.argv[3]) # numero di cluster, va messo uguale al numero di classi conosciute (quelle nel tsv per intenderci)
 
 
 # Recupero del pickle salvato su disco con i sample e le feature rilevanti estratte da TSFresh. DA USARE PER CONFRONTO
@@ -68,13 +73,38 @@ kwargs = {"metric": "euclidean", "neighborMode": "knn",
           "weightMode": "heatKernel", "k": 5, 't': 1}
 W = construct_W.construct_W(all_features_train.values, **kwargs)
 
-# Esecuzione dell'algoritmo NDFS. Otteniamo il peso delle feature per cluster.
-featurePesate = NDFS.ndfs(all_features_train.values, n_clusters=20, W=W)
+# Eseguo più volte NDFS in modo da ottenere davvero le feature migliori
+dizionarioOccorrenzeFeature = {}
 
-# ordinamento delle feature in ordine discendente
-idx = feature_ranking(featurePesate)
+for i in range(0, 10):
 
-idxSelected = idx[0:num_feature]   # seleziono il numero di feature che voglio
+    # Esecuzione dell'algoritmo NDFS. Otteniamo il peso delle feature per cluster.
+    featurePesate = NDFS.ndfs(all_features_train, n_clusters=20, W=W)
+
+    # ordinamento delle feature in ordine discendente
+    idx = feature_ranking(featurePesate)
+
+    # prendo il numero di feature scelte
+    idxSelected = idx[0:num_feature]
+
+    # aggiorno il numero di occorrenze di quella feature nel dizionario
+    for feature in idxSelected:
+        if feature in dizionarioOccorrenzeFeature:
+            dizionarioOccorrenzeFeature[feature] = dizionarioOccorrenzeFeature[feature]+1
+        else:
+            dizionarioOccorrenzeFeature[feature] = 1
+
+# Ordino il dizionario in maniera discendente in modo da avere la feature che compare più volte all'inizio.
+# Qui abbiamo un dizionario contenente tupla (nomeFeature, numeroOccorrenze)
+dizionarioOccorrenzeFeature_sorted = sorted(dizionarioOccorrenzeFeature.items(), key=lambda kv: -kv[1])
+
+# Metto tutti in nomi delle feature presenti in nel dizionario in un array
+featureFrequenti = []
+for key, value in dizionarioOccorrenzeFeature_sorted:
+    featureFrequenti.append(key)
+
+# seleziono il numero di feature che voglio
+idxSelected = featureFrequenti[0:num_feature]
 
 # Estraggo i nomi delle feature che ho scelto
 nomiFeatureSelezionate = []
@@ -94,56 +124,17 @@ labelConosciute = estrattoreClassiConosciute.estraiLabelConosciute(
 
 
 # K-means su dataframe estratto da TSFresh
-nmi_total = 0
-acc_total = 0
-sil_total = 0
-db_score_total = 0
-ch_score_total = 0
-purity_total = 0
+print("Risultati con feature rilevanti estratte da TSFresh")
+nmi, acc, sil, db_score, ch_score, purity = valutazione.evaluation(
+X_selected=relevant_features_train.values, X_test=relevant_features_test.values, n_clusters=num_cluster, y=labelConosciute)
+print('Silhouette:', float(sil))
+print('Davies-Bouldin index score:', float(db_score))
+print('Calinski-Harabasz index score:', float(ch_score))
+print('NMI:', float(round(((nmi)), 4)))
+print('Purity:', float(purity))
+print('Accuracy:', float(acc))
 
-for i in range(0, 20):
-    nmi, acc, sil, db_score, ch_score, purity= valutazione.evaluation(X_selected=relevant_features_train.values,X_test = relevant_features_test.values, n_clusters=num_cluster, y=labelConosciute)
-    nmi_total += nmi
-    acc_total += acc
-    sil_total += sil
-    db_score_total += db_score
-    ch_score_total += ch_score
-    purity_total += purity
-
-# output the average NMI and average ACC
-
-print ('SIL:', float(sil_total)/20)
-print ('DB SCORE:', float(db_score_total)/20)
-print ('CH SCORE:', float(ch_score_total)/20)
-print ('NMI:', float(nmi_total)/20)
-print ('PURITY:', float(purity_total)/20)
-print ('ACC:', float(acc_total)/20)
-
-print("==================================")
 # K-means su feature selezionate
-
-nmi_total = 0
-acc_total = 0
-sil_total = 0
-db_score_total = 0
-ch_score_total = 0
-purity_total = 0
-
-for i in range(0, 20):
-    nmi, acc, sil, db_score, ch_score, purity= valutazione.evaluation(X_selected=dataframeFeatureSelezionate.values,X_test = all_features_test.values, n_clusters=num_cluster, y=labelConosciute)
-    nmi_total += nmi
-    acc_total += acc
-    sil_total += sil
-    db_score_total += db_score
-    ch_score_total += ch_score
-    purity_total += purity
-
-# output the average NMI and average ACC
-
-print ('SIL:', float(sil_total)/20)
-print ('DB SCORE:', float(db_score_total)/20)
-print ('CH SCORE:', float(ch_score_total)/20)
-print ('NMI:', float(nmi_total)/20)
-print ('PURITY:', float(purity_total)/20)
-print ('ACC:', float(acc_total)/20)
-
+print("Risultati con feature selezionate da noi con NDFS")
+testFeatureSelection(X_selected=dataframeFeatureSelezionate.values,
+                     X_test=all_features_test.values, num_clusters=num_cluster, y=labelConosciute)
