@@ -102,5 +102,6 @@ def selectFeatureNDFS(filename, num_feature, num_cluster):
 
     # K-means su feature selezionate
     print("\nRisultati con feature selezionate da noi con NDFS")
+    print("Numero feature: {0}".format(all_features_test.shape[1]))
     testFeatureSelection(X_selected=dataframeFeatureSelezionate.values,
                         X_test=all_features_test.values, num_clusters=num_cluster, y=labelConosciute)

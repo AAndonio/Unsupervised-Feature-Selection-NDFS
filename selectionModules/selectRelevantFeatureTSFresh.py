@@ -18,7 +18,8 @@ def selectRelevantFeatureTSFresh(filename, num_cluster):
         "./UCRArchive_2018/{0}/{0}_TEST.tsv".format(filename))
 
     # K-means su dataframe estratto da TSFresh
-    print("Risultati con feature rilevanti estratte da TSFresh")
+    print("\nRisultati con feature rilevanti estratte da TSFresh")
+    print("Numero feature: {0}".format(relevant_features_test.shape[1]))
     nmi, sil, db_score, ch_score, purity = valutazione.evaluation(
     X_selected=relevant_features_train.values, X_test=relevant_features_test.values, n_clusters=num_cluster, y=labelConosciute)
     print('Silhouette:', float(sil))
