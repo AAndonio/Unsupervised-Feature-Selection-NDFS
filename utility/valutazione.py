@@ -1,51 +1,15 @@
 import numpy as np
-import linear_assignment as la
+from utility import linear_assignment as la
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score, normalized_mutual_info_score, confusion_matrix
+from sklearn.metrics.cluster import contingency_matrix
 from sklearn.cluster import KMeans
 
 
 def calcolaPurity(labelConosciute, labels):
-    confusionMatrix = confusion_matrix(labelConosciute, labels)
-
-    totale = 0
-
-    for i in range(0, confusionMatrix.shape[0]):
-        totale = totale + max(confusionMatrix[i])
-
-    return totale/len(labels)
-
-
-def best_map(l1, l2):
-    """
-    Permute labels of l2 to match l1 as much as possible
-    """
-    if len(l1) != len(l2):
-        print ("L1.shape must == L2.shape")
-        exit(0)
-
-    label1 = np.unique(l1)
-    n_class1 = len(label1)
-
-    label2 = np.unique(l2)
-    n_class2 = len(label2)
-
-    n_class = max(n_class1, n_class2)
-    G = np.zeros((n_class, n_class))
-
-    for i in range(0, n_class1):
-        for j in range(0, n_class2):
-            ss = l1 == label1[i]
-            tt = l2 == label2[j]
-            G[i, j] = np.count_nonzero(ss & tt)
-
-    A = la.linear_assignment(-G)
-
-    new_l2 = np.zeros(l2.shape)
-    for i in range(0, n_class2):
-        new_l2[l2 == label2[A[i][1]]] = label1[A[i][0]]
-    return new_l2.astype(int)
-
+    contingencymatrix = contingency_matrix(labelConosciute, labels)
+    purity = (np.sum(np.amax(contingencymatrix,axis = 0))/np.sum(contingencymatrix))
+    return purity
 
 def evaluation(X_selected, X_test, n_clusters, y):
     """
@@ -75,18 +39,11 @@ def evaluation(X_selected, X_test, n_clusters, y):
     y_predict = k_means.predict(X_test)
 
     # calculate NMI
-    nmi = normalized_mutual_info_score(y, y_predict, average_method='max')
-
-    # calculate ACC
-    y_permuted_predict = best_map(y, y_predict)
-    acc = accuracy_score(y, y_permuted_predict)
-
+    nmi = normalized_mutual_info_score(y, y_predict, average_method='arithmetic')
 
     sil = silhouette_score(X_test, y_predict, metric="euclidean")
     db_score = davies_bouldin_score(X_test, y_predict)
     ch_score = calinski_harabasz_score(X_test, y_predict)
     purity = calcolaPurity(y, y_predict)
 
-
-
-    return nmi, acc, sil, db_score, ch_score, purity
+    return nmi, sil, db_score, ch_score, purity
