@@ -22,8 +22,8 @@ def selectRelevantFeatureTSFresh(filename, num_cluster):
     print("Numero feature: {0}".format(relevant_features_test.shape[1]))
     nmi, sil, db_score, ch_score, purity = valutazione.evaluation(
     X_selected=relevant_features_train.values, X_test=relevant_features_test.values, n_clusters=num_cluster, y=labelConosciute)
-    print('Silhouette:', float(sil))
-    print('Davies-Bouldin index score:', float(db_score))
-    print('Calinski-Harabasz index score:', float(ch_score))
+    print('Silhouette:', float(round(((sil)), 4)))
+    print('Davies-Bouldin index score:', float(round(((db_score)), 4)))
+    print('Calinski-Harabasz index score:', float(round(((ch_score)), 4)))
     print('NMI:', float(round(((nmi)), 4)))
-    print('Purity:', float(purity))
+    print('Purity:', float(round(((purity)), 4)))

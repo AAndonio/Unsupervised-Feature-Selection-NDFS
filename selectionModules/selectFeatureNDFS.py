@@ -28,12 +28,12 @@ def testFeatureSelection(X_selected, X_test, num_clusters, y):
             purity = new_purity
 
     # output Silhouette, DB index, CH index, NMI, Purity e Accuracy
-    print('Silhouette:', float(sil))
-    print('Davies-Bouldin index score:', float(db_score))
-    print('Calinski-Harabasz index score:', float(ch_score))
+    print('Silhouette:', float(round(((sil)), 4)))
+    print('Davies-Bouldin index score:', float(round(((db_score)), 4)))
+    print('Calinski-Harabasz index score:', float(round(((ch_score)), 4)))
     print('NMI:', float(round(((nmi)), 4)))
-    print('Purity:', float(purity))
-
+    print('Purity:', float(round(((purity)), 4)))
+    
 def selectFeatureNDFS(filename, num_feature, num_cluster):
 
     # Recupero del pickle salvato su disco con i sample e TUTTE le feature estratte da TSFresh. SU QUESTO LAVOREREMO NOI

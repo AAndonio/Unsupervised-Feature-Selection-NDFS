@@ -14,10 +14,6 @@ def selectAllFeatureTSFresh(filename, num_cluster):
     all_features_test = pd.read_pickle(
         "./pickle/feature_complete/TEST/{0}_TEST_FeatureComplete.pkl".format(filename))
 
-    # Elimino colonne con valori NaN
-    all_features_train = all_features_train.dropna(axis=1)
-    all_features_test = all_features_test.dropna(axis=1)
-
     # Estraggo le classi conosciute
     labelConosciute = estrattoreClassiConosciute.estraiLabelConosciute(
         "./UCRArchive_2018/{0}/{0}_TEST.tsv".format(filename))
@@ -27,8 +23,8 @@ def selectAllFeatureTSFresh(filename, num_cluster):
     print("Numero feature: {0}".format(all_features_test.shape[1]))
     nmi, sil, db_score, ch_score, purity = valutazione.evaluation(
     X_selected=all_features_train.values, X_test=all_features_test.values, n_clusters=num_cluster, y=labelConosciute)
-    print('Silhouette:', float(sil))
-    print('Davies-Bouldin index score:', float(db_score))
-    print('Calinski-Harabasz index score:', float(ch_score))
+    print('Silhouette:', float(round(((sil)), 4)))
+    print('Davies-Bouldin index score:', float(round(((db_score)), 4)))
+    print('Calinski-Harabasz index score:', float(round(((ch_score)), 4)))
     print('NMI:', float(round(((nmi)), 4)))
-    print('Purity:', float(purity))
+    print('Purity:', float(round(((purity)), 4)))
