@@ -34,7 +34,9 @@ all_features_test.to_pickle("../pickle/feature_complete/TEST/{0}_TEST_FeatureCom
 features_relevant_train = extract_relevant_features(listOut_train,series_train, column_id='id', column_sort='time')
 features_relevant_test = extract_relevant_features(listOut_test,series_test, column_id='id', column_sort='time')
 
-print(len(features_relevant_test.columns))
+# Elimino colonne con valori NaN
+features_relevant_train = features_relevant_train.dropna(axis=1)
+features_relevant_test = features_relevant_test.dropna(axis=1)
 
 featureIntersection = features_relevant_train.columns.intersection(features_relevant_test.columns)
 
