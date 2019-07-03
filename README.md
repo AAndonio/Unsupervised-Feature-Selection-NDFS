@@ -1,4 +1,4 @@
-# Unsupervised-Feature-Selection-NTFS
+# Unsupervised-Feature-Selection-NDFS
 
 *Authors: Claudio Amato, Antonio Vivone*
 
